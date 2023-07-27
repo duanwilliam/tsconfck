@@ -325,27 +325,9 @@ export interface TSConfckParseOptions extends TSConfckFindOptions {
 	cache?: Map<string, TSConfckParseResult>;
 
 	/**
-	 * try to find and parse the closest tsconfig.json or jsconfig.json file
-	 *
-	 * If set to `true`, emulates native `ts.findConfigFile` behavior, which first searches for any tsconfig file,
-	 * and then only searches for a jsconfig if no tsconfig was found.
-	 *
-	 * If set to `"parallel"`, returns the closest tsconfig _or_ jsconfig file that exists.
-	 *
-	 * For example, given the tree structure
-	 *
-	 * ```
-	 * ~/
-	 * ├─ a/
-	 * │ 	└─ jsconfig.json
-	 * └─ tsconfig.json
-	 * ```
-	 *
-	 * then calling `find` in `~/a` would return:
-	 * - `~/tsconfig.json` if `jsconfig = true`
-	 * - `~/a/jsconfig.json` if `jsconfig = "parallel"`
+	 * try to find and parse the closest tsconfig.json, or jsconfig.json if no tsconfig exists
 	 */
-	jsconfig?: boolean | 'parallel';
+	jsconfig?: boolean;
 
 	/**
 	 * treat missing tsconfig as empty result instead of an error
