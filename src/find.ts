@@ -9,12 +9,15 @@ import { promises as fs } from 'fs';
  * @returns {Promise<string>} absolute path to closest tsconfig.json
  */
 export async function find(filename: string, options?: TSConfckFindOptions) {
-	let dir = path.dirname(path.resolve(filename));
+	const initialDir = path.dirname(path.resolve(filename));
 	const root = options?.root ? path.resolve(options.root) : null;
+	let dir = initialDir;
+	let filesToSearchFor =
+		options?.jsconfig === 'parallel' ? ['tsconfig.json', 'jsconfig.json'] : ['tsconfig.json'];
 	while (dir) {
-		const tsconfig = await tsconfigInDir(dir, options);
-		if (tsconfig) {
-			return tsconfig;
+		const config = await filesInDir(dir, filesToSearchFor, options?.tsConfigPaths);
+		if (config) {
+			return config;
 		} else {
 			if (root === dir) {
 				break;
@@ -27,23 +30,54 @@ export async function find(filename: string, options?: TSConfckFindOptions) {
 			}
 		}
 	}
-	throw new Error(`no tsconfig file found for ${filename}`);
+	if (options?.jsconfig === true) {
+		dir = initialDir;
+		filesToSearchFor = ['jsconfig.json'];
+		while (dir) {
+			const jsconfig = await filesInDir(dir, filesToSearchFor, options?.tsConfigPaths);
+			if (jsconfig) {
+				return jsconfig;
+			} else {
+				if (root === dir) {
+					break;
+				}
+				const parent = path.dirname(dir);
+				if (parent === dir) {
+					break;
+				} else {
+					dir = parent;
+				}
+			}
+		}
+	}
+	if (options?.jsconfig) {
+		throw new Error(`no tsconfig or jsconfig file found for ${filename}`);
+	} else {
+		throw new Error(`no tsconfig file found for ${filename}`);
+	}
 }
 
-async function tsconfigInDir(dir: string, options?: TSConfckFindOptions): Promise<string | void> {
-	const tsconfig = path.join(dir, 'tsconfig.json');
-	if (options?.tsConfigPaths) {
-		return options.tsConfigPaths.has(tsconfig) ? tsconfig : undefined;
+async function filesInDir(
+	dir: string,
+	files: string | string[],
+	knownPaths?: Set<string>
+): Promise<string | undefined | void> {
+	const filesList = Array.isArray(files) ? files : [files];
+	const filepaths = filesList.map((filename) => path.join(dir, filename));
+	if (knownPaths) {
+		return filepaths.find((filepath) => knownPaths.has(filepath));
 	}
-	try {
-		const stat = await fs.stat(tsconfig);
-		if (stat.isFile() || stat.isFIFO()) {
-			return tsconfig;
-		}
-	} catch (e) {
-		// ignore does not exist error
-		if (e.code !== 'ENOENT') {
-			throw e;
+	for (const filepath of filepaths) {
+		try {
+			const stat = await fs.stat(filepath);
+			if (stat.isFile() || stat.isFIFO()) {
+				return filepath;
+			}
+		} catch (e) {
+			// ignore does not exist error
+			if (e.code !== 'ENOENT') {
+				throw e;
+			}
 		}
 	}
 }
@@ -63,4 +97,27 @@ export interface TSConfckFindOptions {
 	 * Improves performance but may lead to different results from native typescript when no tsconfig is found inside root
 	 */
 	root?: string;
+
+	/**
+	 * return the closest tsconfig file, or jsconfig.json if it exists instead.
+	 *
+	 * If set to `true`, emulates native `ts.findConfigFile` behavior, which first searches for any tsconfig file,
+	 * and then only searches for a jsconfig if no tsconfig was found.
+	 *
+	 * If set to `"parallel"`, returns the closest tsconfig _or_ jsconfig file that exists.
+	 *
+	 * For example, given the tree structure
+	 *
+	 * ```
+	 * ~/
+	 * ├─ a/
+	 * │ 	└─ jsconfig.json
+	 * └─ tsconfig.json
+	 * ```
+	 *
+	 * then calling `find` in `~/a` would return:
+	 * - `~/tsconfig.json` if `jsconfig = true`
+	 * - `~/a/jsconfig.json` if `jsconfig = "parallel"`
+	 */
+	jsconfig?: boolean | 'parallel';
 }

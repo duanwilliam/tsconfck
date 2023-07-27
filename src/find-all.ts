@@ -6,6 +6,7 @@ interface WalkState {
 	calls: number;
 	// eslint-disable-next-line no-unused-vars
 	skip?: (dir: string) => boolean;
+	jsconfig?: boolean;
 	err: boolean;
 }
 
@@ -23,6 +24,7 @@ export async function findAll(dir: string, options?: TSConfckFindAllOptions): Pr
 		files: [],
 		calls: 0,
 		skip: options?.skip,
+		jsconfig: options?.jsconfig,
 		err: false
 	};
 	return new Promise((resolve, reject) => {
@@ -52,8 +54,11 @@ function walk(
 			for (const ent of entries) {
 				if (ent.isDirectory() && !state.skip?.(ent.name)) {
 					walk(`${dir}${sep}${ent.name}`, state, done);
-				} else if (ent.isFile() && ent.name === 'tsconfig.json') {
-					state.files.push(`${dir}${sep}tsconfig.json`);
+				} else if (
+					ent.isFile() &&
+					(ent.name === 'tsconfig.json' || (state.jsconfig && ent.name === 'jsconfig.json'))
+				) {
+					state.files.push(`${dir}${sep}${ent.name}`);
 				}
 			}
 			if (--state.calls === 0) {
@@ -72,4 +77,9 @@ export interface TSConfckFindAllOptions {
 	 * eg ` dir => dir === 'node_modules' || dir === '.git'`
 	 */ // eslint-disable-next-line no-unused-vars
 	skip?: (dir: string) => boolean;
+
+	/**
+	 * also find all jsconfig.json files in dir
+	 */
+	jsconfig?: boolean;
 }

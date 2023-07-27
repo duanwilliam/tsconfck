@@ -32,7 +32,7 @@ export async function parseNative(
 		try {
 			tsconfigFile = await resolveTSConfig(filename);
 			if (!tsconfigFile) {
-				tsconfigFile = await findNative(filename);
+				tsconfigFile = await findNative(filename, options?.jsconfig);
 			}
 		} catch (e) {
 			const notFoundResult = {
@@ -46,7 +46,7 @@ export async function parseNative(
 	} else {
 		tsconfigFile = await resolveTSConfig(filename);
 		if (!tsconfigFile) {
-			tsconfigFile = await findNative(filename);
+			tsconfigFile = await findNative(filename, options?.jsconfig);
 		}
 	}
 
@@ -253,6 +253,11 @@ export interface TSConfckParseNativeOptions {
 	 * parseNative resolves with { filename: 'no_tsconfig_file_found',tsconfig:{}, result: null} instead of reject with error
 	 */
 	resolveWithEmptyIfConfigNotFound?: boolean;
+
+	/**
+	 * try to find and parse the closest tsconfig.json or jsconfig.json file
+	 */
+	jsconfig?: boolean;
 
 	/**
 	 * Set this option to true to force typescript to ignore all source files.

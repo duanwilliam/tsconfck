@@ -65,9 +65,13 @@ async function parseFile(
 	try {
 		const tsconfigJson = await fs.readFile(tsconfigFile, 'utf-8');
 		const json = toJson(tsconfigJson);
+		const defaultCompilerOptions = getDefaultCompilerOptions(tsconfigFile);
 		const result = {
 			tsconfigFile,
-			tsconfig: normalizeTSConfig(JSON.parse(json), path.dirname(tsconfigFile))
+			tsconfig: normalizeTSConfig(
+				mergeCompilerOptions(JSON.parse(json), defaultCompilerOptions),
+				path.dirname(tsconfigFile)
+			)
 		};
 		cache?.set(tsconfigFile, result);
 		return result;
@@ -79,6 +83,33 @@ async function parseFile(
 			e
 		);
 	}
+}
+
+/**
+ * gets the default compiler options, or null if there are none.
+ */
+function getDefaultCompilerOptions(configFile: string) {
+	const options =
+		path.basename(configFile) === 'jsconfig.json'
+			? {
+					allowJs: true,
+					maxNodeModuleJsDepth: 2,
+					allowSyntheticDefaultImports: true,
+					skipLibCheck: true,
+					noEmit: true
+			  }
+			: null;
+	return options;
+}
+
+function mergeCompilerOptions(tsconfig: any, defaultCompilerOptions: object | null) {
+	if (defaultCompilerOptions) {
+		// default compiler options are always injected as the first keys of the compiler options.
+		// they can then be overwritten by the tsconfig compiler options.
+		// @todo should tsconfig.compilerOptions be typechecked to ensure it's either object or null/undefined (i.e. not a string, number, or array)?
+		tsconfig.compilerOptions = { ...defaultCompilerOptions, ...(tsconfig.compilerOptions ?? {}) };
+	}
+	return tsconfig;
 }
 
 /**
@@ -292,6 +323,29 @@ export interface TSConfckParseOptions extends TSConfckFindOptions {
 	 * You must not modify cached values.
 	 */
 	cache?: Map<string, TSConfckParseResult>;
+
+	/**
+	 * try to find and parse the closest tsconfig.json or jsconfig.json file
+	 *
+	 * If set to `true`, emulates native `ts.findConfigFile` behavior, which first searches for any tsconfig file,
+	 * and then only searches for a jsconfig if no tsconfig was found.
+	 *
+	 * If set to `"parallel"`, returns the closest tsconfig _or_ jsconfig file that exists.
+	 *
+	 * For example, given the tree structure
+	 *
+	 * ```
+	 * ~/
+	 * ├─ a/
+	 * │ 	└─ jsconfig.json
+	 * └─ tsconfig.json
+	 * ```
+	 *
+	 * then calling `find` in `~/a` would return:
+	 * - `~/tsconfig.json` if `jsconfig = true`
+	 * - `~/a/jsconfig.json` if `jsconfig = "parallel"`
+	 */
+	jsconfig?: boolean | 'parallel';
 
 	/**
 	 * treat missing tsconfig as empty result instead of an error
