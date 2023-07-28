@@ -113,4 +113,59 @@ test('should reject when no tsconfig file was found', async () => {
 	}
 });
 
+test('should find tsconfig in parent directory when jsconfig flag set and jsconfig in same directory', async () => {
+	const expected = path.resolve('tests', 'fixtures', 'find-jsconfig', 'empty', 'tsconfig.json');
+	const inputs = [
+		path.join('tests', 'fixtures', 'find-jsconfig', 'empty', 'b', 'bar.ts'),
+		path.join('.', 'tests', 'fixtures', 'find-jsconfig', 'empty', 'b', 'bar.ts'),
+		path.resolve('tests', 'fixtures', 'find-jsconfig', 'empty', 'b', 'bar.ts')
+	];
+	for (const input of inputs) {
+		const config = await find(input, { jsconfig: true });
+		assert.is(config, expected, `input: ${input}`);
+	}
+});
+
+test('should find tsconfig in parent directory with allowsJs=false when jsconfig set to true and jsconfig in same directory', async () => {
+	const root = path.resolve('tests', 'fixtures', 'find-jsconfig', 'tsconfig-no-allow-js');
+	const expected = path.resolve(root, 'tsconfig.json');
+	const inputs = [
+		path.join('tests', 'fixtures', 'find-jsconfig', 'tsconfig-no-allow-js', 'b', 'bar.js'),
+		path.join('.', 'tests', 'fixtures', 'find-jsconfig', 'tsconfig-no-allow-js', 'b', 'bar.js'),
+		path.resolve('tests', 'fixtures', 'find-jsconfig', 'tsconfig-no-allow-js', 'b', 'bar.js')
+	];
+	for (const input of inputs) {
+		const config = await find(input, { jsconfig: true, root });
+		assert.is(config, expected, `input: ${input}`);
+	}
+});
+
+test('should find tsconfig in parent directory with include:**/*.ts when jsconfig set to true and jsconfig in same directory', async () => {
+	const root = path.resolve('tests', 'fixtures', 'find-jsconfig', 'tsconfig-only-include-ts');
+	const expected = path.resolve(root, 'tsconfig.json');
+	const inputs = [
+		path.join('tests', 'fixtures', 'find-jsconfig', 'tsconfig-only-include-ts', 'b', 'bar.js'),
+		path.join('.', 'tests', 'fixtures', 'find-jsconfig', 'tsconfig-only-include-ts', 'b', 'bar.js'),
+		path.resolve('tests', 'fixtures', 'find-jsconfig', 'tsconfig-only-include-ts', 'b', 'bar.js')
+	];
+	for (const input of inputs) {
+		const config = await find(input, { jsconfig: true, root });
+		assert.is(config, expected, `input: ${input}`);
+	}
+});
+
+test('should find tsconfig in parent directory with exclude:**/*.js when jsconfig set to true and jsconfig in same directory', async () => {
+	const root = path.resolve('tests', 'fixtures', 'find-jsconfig', 'tsconfig-exclude-js');
+	const expected = path.resolve(root, 'tsconfig.json');
+	const inputs = [
+		path.join('tests', 'fixtures', 'find-jsconfig', 'tsconfig-exclude-js', 'b', 'bar.js'),
+		path.join('.', 'tests', 'fixtures', 'find-jsconfig', 'tsconfig-exclude-js', 'b', 'bar.js'),
+		path.resolve('tests', 'fixtures', 'find-jsconfig', 'tsconfig-exclude-js', 'b', 'bar.js')
+	];
+	for (const input of inputs) {
+		const config = await find(input, { jsconfig: true, root });
+		assert.is(config, expected, `input: ${input}`);
+	}
+});
+
 test.run();

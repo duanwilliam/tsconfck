@@ -297,4 +297,21 @@ test('should prevent typescript file scanning when ignoreSourceFiles: true is se
 	}
 });
 
+test('should resolve with expected for valid jsconfig.json', async () => {
+	const samples = await glob('tests/fixtures/parse-jsconfig/**/jsconfig.json');
+	for (const filename of samples) {
+		const expected = await loadExpectedJSON(filename, 'expected.native.json');
+		try {
+			const actual = await parseNative(filename);
+			assert.equal(actual.tsconfig, expected, `testfile: ${filename}`);
+			assert.equal(actual.tsconfigFile, path.resolve(filename));
+		} catch (e) {
+			if (e.code === 'ERR_ASSERTION') {
+				throw e;
+			}
+			assert.unreachable(`parsing ${filename} failed: ${e}`);
+		}
+	}
+});
+
 test.run();

@@ -1,0 +1,21 @@
+{
+  "files": ["foo.ts"],
+  "compilerOptions": {
+    "allowJs": false,
+    "maxNodeModuleJsDepth": 2,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": false,
+    "noEmit": true,
+    "types": ["foo"],
+    "importsNotUsedAsValues": "error",
+    "module": "es2020",
+    "moduleResolution": "node",
+    "newLine": "lf",
+    "target": "esnext"
+  },
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority"
+  }
+}

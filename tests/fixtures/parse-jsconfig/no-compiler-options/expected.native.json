@@ -1,0 +1,17 @@
+{
+  "include": [],
+  "exclude": [],
+  "buildOptions": {},
+  "compileOnSave": true,
+  "files": [],
+  "references": [],
+  "typeAcquisition": {},
+  "watchOptions": {},
+  "compilerOptions": {
+    "allowJs": true,
+    "maxNodeModuleJsDepth": 2,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}

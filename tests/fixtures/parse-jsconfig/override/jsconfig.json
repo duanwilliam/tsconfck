@@ -1,0 +1,18 @@
+{
+  "files": ["foo.ts"],
+  "compilerOptions": {
+    "types": ["foo"],
+    "allowJs": false,
+    "importsNotUsedAsValues": "error",
+    "module": "es2020",
+    "moduleResolution": "node",
+    "skipLibCheck": false,
+    "newLine": "lf",
+    "target": "esnext"
+  },
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority"
+  }
+}
