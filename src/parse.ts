@@ -103,6 +103,8 @@ function getDefaultCompilerOptions(configFile: string) {
 }
 
 function mergeCompilerOptions(tsconfig: any, defaultCompilerOptions: object | null) {
+	// if there are no default compiler options and compilerOptions isn't defined in the tsconfig,
+	// the key shouldn't be created
 	if (defaultCompilerOptions) {
 		// default compiler options are always injected as the first keys of the compiler options.
 		// they can then be overwritten by the tsconfig compiler options.
